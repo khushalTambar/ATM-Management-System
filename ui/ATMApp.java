@@ -1,4 +1,3 @@
-
 package ui;
 
 import dao.InMemoryAccountDAO;
@@ -28,6 +27,56 @@ public class ATMApp {
         System.out.print("Choose: ");
     }
 
+    // Helper method to safely read numeric (double) input
+    private static double readDouble(Scanner sc, String prompt) {
+        double value = 0;
+        while (true) {
+            System.out.print(prompt);
+            String input = sc.nextLine().trim();
+            try {
+                value = Double.parseDouble(input);
+                if (value < 0) {
+                    System.out.println("Enter a non-negative number.");
+                } else {
+                    break;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a numeric value.");
+            }
+        }
+        return value;
+    }
+
+    // Helper method to read numeric PIN
+    private static String readNumericPin(Scanner sc, String prompt) {
+        String pin;
+        while (true) {
+            System.out.print(prompt);
+            pin = sc.nextLine().trim();
+            if (pin.matches("\\d{4,}")) {
+                break;
+            } else {
+                System.out.println("PIN must be at least 4 digits and numeric only.");
+            }
+        }
+        return pin;
+    }
+
+    // Helper method to read numeric account number
+    private static String readAccountNumber(Scanner sc, String prompt) {
+        String acc;
+        while (true) {
+            System.out.print(prompt);
+            acc = sc.nextLine().trim();
+            if (acc.matches("\\d+")) {
+                break;
+            } else {
+                System.out.println("Account number must contain digits only.");
+            }
+        }
+        return acc;
+    }
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         ATMService service = new ATMService(new InMemoryAccountDAO());
@@ -41,21 +90,16 @@ public class ATMApp {
                     case "1": { // Sign Up
                         System.out.print("Holder name: ");
                         String name = sc.nextLine().trim();
-                        System.out.print("Desired account number: ");
-                        String accNum = sc.nextLine().trim();
-                        System.out.print("PIN (min 4 digits): ");
-                        String pin = sc.nextLine().trim();
-                        System.out.print("Initial deposit (can be 0): ");
-                        double init = Double.parseDouble(sc.nextLine().trim());
+                        String accNum = readAccountNumber(sc, "Desired account number: ");
+                        String pin = readNumericPin(sc, "PIN (min 4 digits): ");
+                        double init = readDouble(sc, "Initial deposit (can be 0): ");
                         String created = service.signup(name, accNum, pin, init);
                         System.out.println("Account created: " + created);
                         break;
                     }
                     case "2": { // Login + session loop
-                        System.out.print("Account number: ");
-                        String accNum = sc.nextLine().trim();
-                        System.out.print("PIN: ");
-                        String pin = sc.nextLine().trim();
+                        String accNum = readAccountNumber(sc, "Account number: ");
+                        String pin = readNumericPin(sc, "PIN: ");
                         Account current = service.login(accNum, pin);
                         boolean inSession = true;
                         while (inSession) {
@@ -69,8 +113,7 @@ public class ATMApp {
                                         break;
                                     }
                                     case "2": {
-                                        System.out.print("Amount to deposit: ");
-                                        double amt = Double.parseDouble(sc.nextLine().trim());
+                                        double amt = readDouble(sc, "Amount to deposit: ");
                                         System.out.print("Note (optional): ");
                                         String note = sc.nextLine();
                                         double bal = service.deposit(current, amt, note);
@@ -78,8 +121,7 @@ public class ATMApp {
                                         break;
                                     }
                                     case "3": {
-                                        System.out.print("Amount to withdraw: ");
-                                        double amt = Double.parseDouble(sc.nextLine().trim());
+                                        double amt = readDouble(sc, "Amount to withdraw: ");
                                         System.out.print("Note (optional): ");
                                         String note = sc.nextLine();
                                         double bal = service.withdraw(current, amt, note);
@@ -87,10 +129,8 @@ public class ATMApp {
                                         break;
                                     }
                                     case "4": {
-                                        System.out.print("Destination account: ");
-                                        String to = sc.nextLine().trim();
-                                        System.out.print("Amount to transfer: ");
-                                        double amt = Double.parseDouble(sc.nextLine().trim());
+                                        String to = readAccountNumber(sc, "Destination account: ");
+                                        double amt = readDouble(sc, "Amount to transfer: ");
                                         System.out.print("Note (optional): ");
                                         String note = sc.nextLine();
                                         service.transfer(current, to, amt, note);
